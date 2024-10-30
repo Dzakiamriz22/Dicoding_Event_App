@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">Dicoding Event App</string>
+    <string name="title_home">Beranda</string>
+    <string name="title_upcoming">Event Mendatang</string>
+    <string name="title_finished">Event Selesai</string>
+    <string name="title_favorite">Event Favorit</string>
+    <string name="title_settings">Pengaturan</string>
+    <string name="title_detail">Detail Acara</string>
+
+    <string name="back_button">Tombol Kembali</string>
+    <string name="search_bar">Cari Acara</string>
+
+    <string name="label_upcoming">Acara Mendatang</string>
+    <string name="label_finished">Acara yang Telah Selesai</string>
+    <string name="label_favorite">Acara Favorit</string>
+    <string name="label_settings">Pengaturan</string>
+
+    <string name="event_date_same_day">%1$s | %2$s - %3$s WIB</string>
+    <string name="event_date_different_day">%1$s | %2$s - %3$s | %4$s WIB</string>
+    <string name="event_image">Gambar Acara</string>
+    <string name="owner_name">Penyelenggara: \u00A0</string>
+    <string name="category">Kategori: \u00A0</string>
+    <string name="time">Waktu: \u00A0</string>
+    <string name="location">Lokasi: \u00A0</string>
+    <string name="quota">Kuota Tersisa: \u00A0</string>
+    <string name="description">Deskripsi: \u00A0</string>
+    <string name="to_website">Kunjungi Website</string>
+    <string name="no_result">Tidak ada hasil untuk pencarianmu</string>
+
+    <string name="failed_to_load_data">Gagal memuat data dari server.</string>
+    <string name="no_internet_connection">Koneksi internet tidak tersedia.</string>
+    <string name="no_favorite">Tidak ada acara favorit yang kamu miliki.</string>
+    <string name="success_save_to_favorite">Acara berhasil ditambahkan ke daftar favorit.</string>
+    <string name="success_remove_from_favorite">Acara berhasil dihapus dari daftar favorit.</string>
+    <string name="dark_mode">Mode Gelap</string>
+    <string name="notification">Notifikasi</string>
+    <string name="notification_content_text">Akan berlangsung pada %1$s | %2$s WIB.</string>
+    <string name="notification_subtext">Pengingat</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
