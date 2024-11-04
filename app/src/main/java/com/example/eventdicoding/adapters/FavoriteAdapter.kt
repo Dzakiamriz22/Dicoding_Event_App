@@ -56,7 +56,7 @@ class FavoriteAdapter(
         private fun setClickListener(eventId: Int, navController: NavController) {
             binding.eventCard.setOnClickListener {
                 EventUtil.eventId = eventId
-                navController.navigate(R.id.action_fragmentFavorite_to_detailActivity)
+                navController.navigate(R.id.action_fragmentFavorite_to_detail_activity)
             }
         }
     }

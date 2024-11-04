@@ -17,7 +17,7 @@
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_fragmentHome_to_detailActivity"
+            android:id="@+id/action_fragmentHome_to_detail_activity"
             app:destination="@id/detail_activity" />
     </fragment>
 
@@ -27,7 +27,7 @@
         android:label="@string/title_upcoming"
         tools:layout="@layout/fragment_upcoming">
         <action
-            android:id="@+id/action_fragmentUpcoming_to_detailActivity"
+            android:id="@+id/action_fragmentUpcoming_to_detail_activity"
             app:destination="@id/detail_activity" />
     </fragment>
 
@@ -37,7 +37,7 @@
         android:label="@string/title_finished"
         tools:layout="@layout/fragment_finished">
         <action
-            android:id="@+id/action_fragmentFinished_to_detailActivity"
+            android:id="@+id/action_fragmentFinished_to_detail_activity"
             app:destination="@id/detail_activity" />
     </fragment>
 
@@ -46,14 +46,12 @@
         android:name="com.example.eventdicoding.ui.FavoriteFragment"
         tools:layout="@layout/fragment_favorite">
         <action
-            android:id="@+id/action_fragmentFavorite_to_detailActivity"
+            android:id="@+id/action_fragmentFavorite_to_detail_activity"
             app:destination="@id/detail_activity" />
     </fragment>
 
     <fragment
         android:id="@+id/navigation_settings"
         android:name="com.example.eventdicoding.ui.SettingsFragment"
-        tools:layout="@layout/fragment_settings">
-    </fragment>
-
+        tools:layout="@layout/fragment_settings" />
 </navigation>

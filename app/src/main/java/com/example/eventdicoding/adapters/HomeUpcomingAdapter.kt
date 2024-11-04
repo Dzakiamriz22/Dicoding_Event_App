@@ -45,7 +45,7 @@ class HomeUpcomingAdapter(
 
             binding.eventCard.setOnClickListener {
                 EventUtil.eventId = event.id
-                navController.navigate(R.id.action_fragmentHome_to_detailActivity)
+                navController.navigate(R.id.action_fragmentHome_to_detail_activity)
             }
         }
     }

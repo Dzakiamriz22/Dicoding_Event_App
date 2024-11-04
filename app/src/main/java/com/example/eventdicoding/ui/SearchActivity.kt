@@ -1,6 +1,7 @@
 package com.example.eventdicoding.ui
 
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -33,24 +34,20 @@ class SearchActivity : AppCompatActivity(R.layout.activity_search) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupUI()
-        setupObservers()
-    }
-
-    private fun setupUI() {
         setupButton()
         setupRecyclerView()
         setupSearchView()
+        setupObservers()
     }
 
     private fun setupButton() {
-        binding.backButton.setOnClickListener { finish() }
-        binding.progBar.visibility = View.GONE
-        binding.noResult.visibility = View.GONE
+        binding.backButton.setOnClickListener {
+            finish()
+        }
     }
 
     private fun setupRecyclerView() {
-        searchAdapter = SearchAdapter(emptyList())
+        searchAdapter = SearchAdapter(listOf())
         binding.rvUpcomingEvent.layoutManager = LinearLayoutManager(this)
         binding.rvUpcomingEvent.adapter = searchAdapter
     }
@@ -64,49 +61,59 @@ class SearchActivity : AppCompatActivity(R.layout.activity_search) {
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
-                    if (it.isNotEmpty()) {
-                        searchViewModel.getEventsByKeyword(it.trim())
-                        binding.progBar.visibility = View.VISIBLE // Show progress bar
-                    }
+                if (!query.isNullOrEmpty()) {
+                    performSearch(query)
                 }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Jika Anda ingin melakukan pencarian saat mengetik, bisa tambahkan logika di sini
                 return false
             }
         })
     }
 
+    private fun performSearch(query: String) {
+        searchViewModel.getEventsByKeyword(query)
+        binding.progBar.visibility = View.VISIBLE
+    }
+
     private fun setupObservers() {
-        searchViewModel.eventsByKeyword.observe(this) { events ->
-            binding.progBar.visibility = View.GONE // Hide progress bar after loading
-            if (events != null && events.isNotEmpty()) {
-                searchAdapter.updateEvents(events)
+        searchViewModel.eventsByKeyword.observe(this) {
+            binding.progBar.visibility = View.GONE
+            searchAdapter.updateEvents(it)
+
+            if (it.isNotEmpty()) {
                 binding.rvUpcomingEvent.visibility = View.VISIBLE
                 binding.noResult.visibility = View.GONE
             } else {
                 binding.rvUpcomingEvent.visibility = View.GONE
-                binding.noResult.text = getString(R.string.no_result)
+                binding.noResult.text = resources.getString(R.string.no_result)
                 binding.noResult.visibility = View.VISIBLE
             }
         }
 
-        searchViewModel.exception.observe(this) { hasException ->
-            if (hasException) {
-                Toast.makeText(this, getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show()
-                binding.noResult.text = getString(R.string.failed_to_load_data)
+        searchViewModel.exception.observe(this) {
+            if (it) {
+                Toast.makeText(
+                    this,
+                    resources.getString(R.string.no_internet_connection),
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.noResult.text = resources.getString(R.string.failed_to_load_data)
                 binding.noResult.visibility = View.VISIBLE
                 searchViewModel.resetException()
             }
         }
 
-        searchViewModel.isLoading.observe(this) { isLoading ->
-            binding.progBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            binding.rvUpcomingEvent.visibility = if (isLoading) View.GONE else View.VISIBLE
-            binding.noResult.visibility = if (isLoading) View.GONE else View.VISIBLE
+        searchViewModel.isLoading.observe(this) {
+            if (it) {
+                binding.progBar.visibility = View.VISIBLE
+                binding.rvUpcomingEvent.visibility = View.GONE
+                binding.noResult.visibility = View.GONE
+            } else {
+                binding.progBar.visibility = View.GONE
+            }
         }
     }
 }

@@ -57,7 +57,7 @@ class UpcomingAdapter(
         }
 
         private fun navigateToDetailActivity(navController: NavController) {
-            navController.navigate(R.id.action_fragmentUpcoming_to_detailActivity)
+            navController.navigate(R.id.action_fragmentUpcoming_to_detail_activity)
         }
     }
 }

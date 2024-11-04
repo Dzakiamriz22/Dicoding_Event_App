@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.eventdicoding.data.remote.model.Event
@@ -13,7 +12,9 @@ import com.example.eventdicoding.ui.DetailActivity
 import com.example.eventdicoding.util.DateTime.convertDate
 import com.example.eventdicoding.util.EventUtil
 
-class SearchAdapter(private var events: List<Event>) : RecyclerView.Adapter<SearchAdapter.EventViewHolder>() {
+class SearchAdapter(
+    private var events: List<Event>
+) : RecyclerView.Adapter<SearchAdapter.EventViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -28,12 +29,14 @@ class SearchAdapter(private var events: List<Event>) : RecyclerView.Adapter<Sear
     }
 
     fun updateEvents(newEvents: List<Event>) {
-        val diffResult = DiffUtil.calculateDiff(EventDiffCallback(events, newEvents))
         events = newEvents
-        diffResult.dispatchUpdatesTo(this)
+        notifyDataSetChanged()
     }
 
-    class EventViewHolder(private val binding: ListItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class EventViewHolder(
+        private val binding: ListItemBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
         fun bind(event: Event) {
             loadEventImage(event.imageLogo)
             binding.eventTitle.text = event.name
@@ -57,19 +60,5 @@ class SearchAdapter(private var events: List<Event>) : RecyclerView.Adapter<Sear
             val intent = Intent(context, DetailActivity::class.java)
             context.startActivity(intent)
         }
-    }
-
-    private class EventDiffCallback(
-        private val oldList: List<Event>,
-        private val newList: List<Event>
-    ) : DiffUtil.Callback() {
-        override fun getOldListSize() = oldList.size
-        override fun getNewListSize() = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-            oldList[oldItemPosition].id == newList[newItemPosition].id
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-            oldList[oldItemPosition] == newList[newItemPosition]
     }
 }

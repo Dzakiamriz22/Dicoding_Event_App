@@ -1,5 +1,6 @@
 package com.example.eventdicoding.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -32,6 +33,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun initializeUI() {
         setupBottomNavigation()
+        binding.buttonSearch.setOnClickListener {
+            startActivity(Intent(this, SearchActivity::class.java))
+        }
     }
 
     private fun setupBottomNavigation() {

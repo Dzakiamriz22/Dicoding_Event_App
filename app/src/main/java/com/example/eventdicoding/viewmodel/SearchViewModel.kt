@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SearchViewModel(private val eventRepository: EventRepository) : ViewModel() {
+
     private val _eventsByKeyword = MutableLiveData<List<Event>>()
     val eventsByKeyword: LiveData<List<Event>> = _eventsByKeyword
 
@@ -26,7 +27,7 @@ class SearchViewModel(private val eventRepository: EventRepository) : ViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val events = eventRepository.getEventsByKeyword(keyword).listEvents
-                _eventsByKeyword.postValue(events) // Directly assign events
+                _eventsByKeyword.postValue(events)
                 _exception.postValue(false)
             } catch (e: Exception) {
                 _exception.postValue(true)

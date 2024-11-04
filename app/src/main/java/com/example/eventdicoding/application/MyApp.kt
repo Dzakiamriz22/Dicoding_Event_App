@@ -6,15 +6,17 @@ import androidx.work.WorkManager
 import com.example.eventdicoding.util.workmanager.WorkFactory
 
 class MyApp : Application() {
+
     override fun onCreate() {
         super.onCreate()
-        setupWorkerFactory()
+        initializeWorkManager()
     }
 
-    private fun setupWorkerFactory() {
+    private fun initializeWorkManager() {
         val workerFactory = WorkFactory()
-        WorkManager.initialize(this, Configuration.Builder()
+        val config = Configuration.Builder()
             .setWorkerFactory(workerFactory)
-            .build())
+            .build()
+        WorkManager.initialize(this, config)
     }
 }

@@ -56,7 +56,7 @@ class FinishedAdapter(
         private fun setClickListener(eventId: Int, navController: NavController) {
             binding.eventCard.setOnClickListener {
                 EventUtil.eventId = eventId
-                navController.navigate(R.id.action_fragmentFinished_to_detailActivity)
+                navController.navigate(R.id.action_fragmentFinished_to_detail_activity)
             }
         }
     }
