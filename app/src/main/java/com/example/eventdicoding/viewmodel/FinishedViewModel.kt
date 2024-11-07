@@ -26,39 +26,44 @@ class FinishedViewModel(private val eventRepository: EventRepository) : ViewMode
     private val _refreshException = MutableLiveData<Boolean>()
     val refreshException: LiveData<Boolean> = _refreshException
 
-    fun getFinishedEvents() {
+    fun loadFinishedEvents() {
         if (_finishedEvents.value == null) {
             _isLoading.value = true
+            fetchFinishedEvents()
+        }
+    }
 
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    val events = eventRepository.getFinishedEvents().listEvents
+    fun refreshFinishedEvents() {
+        _isRefreshLoading.value = true
+        fetchFinishedEvents(true)
+    }
+
+    private fun fetchFinishedEvents(isRefresh: Boolean = false) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val events = eventRepository.fetchFinishedEvents().listEvents
+                if (isRefresh) {
                     _finishedEvents.postValue(events)
-                } catch (e: Exception) {
+                } else {
+                    _finishedEvents.postValue(events)
+                }
+            } catch (e: Exception) {
+                if (isRefresh) {
+                    _refreshException.postValue(true)
+                } else {
                     _exception.postValue(true)
-                } finally {
+                }
+            } finally {
+                if (isRefresh) {
+                    _isRefreshLoading.postValue(false)
+                } else {
                     _isLoading.postValue(false)
                 }
             }
         }
     }
 
-    fun refreshFinishedEvents() {
-        _isRefreshLoading.value = true
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val events = eventRepository.getFinishedEvents().listEvents
-                _finishedEvents.postValue(events)
-            } catch (e: Exception) {
-                _refreshException.postValue(true)
-            } finally {
-                _isRefreshLoading.postValue(false)
-            }
-        }
-    }
-
-    fun resetExceptionValues() {
+    fun resetExceptionFlags() {
         _exception.value = false
         _refreshException.value = false
     }

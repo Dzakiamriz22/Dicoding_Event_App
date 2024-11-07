@@ -17,29 +17,26 @@ class HomeViewModel(private val eventRepository: EventRepository) : ViewModel() 
     private val _finishedEvents = MutableLiveData<List<Event>>()
     val finishedEvents: LiveData<List<Event>> = _finishedEvents
 
-    private val _exception = MutableLiveData<Boolean>()
-    val exception: LiveData<Boolean> = _exception
-
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private val _isRefreshLoading = MutableLiveData<Boolean>()
-    val isRefreshLoading: LiveData<Boolean> = _isRefreshLoading
+    private val _isRefreshing = MutableLiveData<Boolean>()
+    val isRefreshing: LiveData<Boolean> = _isRefreshing
 
-    private val _refreshException = MutableLiveData<Boolean>()
-    val refreshException: LiveData<Boolean> = _refreshException
+    private val _error = MutableLiveData<Boolean>()
+    val error: LiveData<Boolean> = _error
 
-    fun getUpcomingAndFinishedEvents() {
+    fun fetchEvents() {
         if (_upcomingEvents.value == null || _finishedEvents.value == null) {
             _isLoading.value = true
 
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val upcomingEvents = eventRepository.getLimitUpcomingEvents().listEvents
-                    val finishedEvents = eventRepository.getLimitFinishedEvents().listEvents
-                    postEvents(upcomingEvents, finishedEvents)
+                    val upcoming = eventRepository.fetchUpcomingEvents().listEvents
+                    val finished = eventRepository.fetchFinishedEvents().listEvents
+                    postEvents(upcoming, finished)
                 } catch (e: Exception) {
-                    _exception.postValue(true)
+                    _error.postValue(true)
                 } finally {
                     _isLoading.postValue(false)
                 }
@@ -47,29 +44,28 @@ class HomeViewModel(private val eventRepository: EventRepository) : ViewModel() 
         }
     }
 
-    fun refreshUpcomingAndFinishedEvents() {
-        _isRefreshLoading.value = true
+    fun refreshEvents() {
+        _isRefreshing.value = true
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val upcomingEvents = eventRepository.getLimitUpcomingEvents().listEvents
-                val finishedEvents = eventRepository.getLimitFinishedEvents().listEvents
-                postEvents(upcomingEvents, finishedEvents)
+                val upcoming = eventRepository.fetchUpcomingEvents().listEvents
+                val finished = eventRepository.fetchFinishedEvents().listEvents
+                postEvents(upcoming, finished)
             } catch (e: Exception) {
-                _refreshException.postValue(true)
+                _error.postValue(true)
             } finally {
-                _isRefreshLoading.postValue(false)
+                _isRefreshing.postValue(false)
             }
         }
     }
 
-    private fun postEvents(upcomingEvents: List<Event>, finishedEvents: List<Event>) {
-        _upcomingEvents.postValue(upcomingEvents)
-        _finishedEvents.postValue(finishedEvents)
+    private fun postEvents(upcoming: List<Event>, finished: List<Event>) {
+        _upcomingEvents.postValue(upcoming)
+        _finishedEvents.postValue(finished)
     }
 
-    fun resetExceptionValues() {
-        _exception.value = false
-        _refreshException.value = false
+    fun resetErrorFlags() {
+        _error.value = false
     }
 }

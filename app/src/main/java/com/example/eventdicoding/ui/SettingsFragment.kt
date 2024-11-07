@@ -12,35 +12,40 @@ import com.example.eventdicoding.databinding.FragmentSettingsBinding
 import kotlinx.coroutines.launch
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
-    private val binding by viewBinding(FragmentSettingsBinding::bind)
 
-    private val settingsPreference by lazy {
-        SettingsPreferences(requireContext())
-    }
+    private val binding by viewBinding(FragmentSettingsBinding::bind)
+    private val settingsPreferences by lazy { SettingsPreferences(requireContext()) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupSwitchButton()
+        initializeDarkModeSwitch()
     }
 
-    private fun setupSwitchButton() {
-        // Observe the dark mode state to set the initial state of the switch
+    private fun initializeDarkModeSwitch() {
+        observeDarkModeSetting()
+        setUpDarkModeSwitchListener()
+    }
+
+    private fun observeDarkModeSetting() {
         lifecycleScope.launch {
-            settingsPreference.darkMode.collect { isEnabled ->
-                binding.darkModeSwitch.isChecked = isEnabled
+            settingsPreferences.darkMode.collect { isDarkModeEnabled ->
+                binding.switchDarkMode.isChecked = isDarkModeEnabled
             }
         }
+    }
 
-        binding.darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
-            lifecycleScope.launch {
-                // Update the DataStore when the switch is toggled
-                settingsPreference.updateDarkMode(isChecked)
+    private fun setUpDarkModeSwitchListener() {
+        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            updateDarkModePreference(isChecked)
+        }
+    }
 
-                // Apply dark mode immediately
-                AppCompatDelegate.setDefaultNightMode(
-                    if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-                )
-            }
+    private fun updateDarkModePreference(isEnabled: Boolean) {
+        lifecycleScope.launch {
+            settingsPreferences.updateDarkMode(isEnabled)
+            AppCompatDelegate.setDefaultNightMode(
+                if (isEnabled) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+            )
         }
     }
 }

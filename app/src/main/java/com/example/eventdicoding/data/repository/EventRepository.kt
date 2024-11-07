@@ -10,43 +10,37 @@ class EventRepository(
     private val apiService: ApiService,
     private val eventDao: EventDao
 ) {
-    suspend fun getUpcomingEvents(): HeaderListEvent {
-        return apiService.getUpcomingEvents(1)
-    }
+    suspend fun fetchUpcomingEvents(): HeaderListEvent =
+        apiService.getUpcomingEvents(1)
 
-    suspend fun getFinishedEvents(): HeaderListEvent {
-        return apiService.getFinishedEvents(0)
-    }
+    suspend fun fetchFinishedEvents(): HeaderListEvent =
+        apiService.getFinishedEvents(0)
 
-    suspend fun getLimitUpcomingEvents(): HeaderListEvent {
-        return apiService.getLimitedUpcomingEvents(1, 5)
-    }
+    suspend fun fetchLimitedUpcomingEvents(): HeaderListEvent =
+        apiService.getLimitedUpcomingEvents(1, 5)
 
-    suspend fun getLimitFinishedEvents(): HeaderListEvent {
-        return apiService.getLimitedFinishedEvents(0, 5)
-    }
+    suspend fun fetchLimitedFinishedEvents(): HeaderListEvent =
+        apiService.getLimitedFinishedEvents(0, 5)
 
-    suspend fun getEventById(id: Int): HeaderSingleEvent {
-        return apiService.getEventById(id)
-    }
+    suspend fun fetchEventById(eventId: Int): HeaderSingleEvent =
+        apiService.getEventById(eventId)
 
-    suspend fun getEventsByKeyword(keyword: String): HeaderListEvent {
-        return apiService.getEventsByKeyword(-1, keyword)
-    }
+    suspend fun searchEventsByKeyword(keyword: String): HeaderListEvent =
+        apiService.getEventsByKeyword(-1, keyword)
 
-    suspend fun saveEventToFavorite(event: Event) {
+    suspend fun addEventToFavorites(event: Event) {
         eventDao.addEvent(event)
     }
 
-    suspend fun getAllFavoriteEvent(): List<Event> {
-        return eventDao.fetchAllEvents()
+    suspend fun fetchAllFavoriteEvents(): List<Event> =
+        eventDao.fetchAllEvents()
+
+    suspend fun checkIfEventExistsInFavorites(eventId: Int): Boolean {
+        val count = eventDao.eventExists(eventId)
+        return count > 0
     }
 
-    suspend fun checkIsEventExistInFavorite(id: Int): Int {
-        return eventDao.eventExists(id)
-    }
-
-    suspend fun removeEventFromFavorite(id: Int) {
-        eventDao.removeEvent(id)
+    suspend fun removeEventFromFavorites(eventId: Int) {
+        eventDao.removeEvent(eventId)
     }
 }

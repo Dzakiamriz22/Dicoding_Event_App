@@ -35,110 +35,33 @@ class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
         val factory = ViewModelFactory(eventRepository)
         ViewModelProvider(this, factory)[DetailViewModel::class.java]
     }
-    private val settingsPreference by lazy {
-        SettingsPreferences(this)  // Langsung gunakan context `this`
-    }
+    private val settingsPreference by lazy { SettingsPreferences(this) }
     private var url = ""
     private var isFavorite = false
+    private val eventId: Int by lazy { intent.getIntExtra("event_id", EventUtil.eventId) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupButton()
-        getEvent()
-        checkIsEventExistInFavorite()
+        setupUI()
         setupObservers()
+        fetchEventDetails()
+        checkFavoriteStatus()
     }
 
-    private fun setupButton() {
-        binding.backButton.setOnClickListener {
-            finish()
+    private fun setupUI() {
+        binding.apply {
+            backButton.setOnClickListener { finish() }
+            webButton.setOnClickListener { openWebPage(url) }
+            favorite.setOnClickListener { toggleFavoriteStatus() }
         }
-        binding.webButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse(url)
-            }
-
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            }
-        }
-        binding.favorite.setOnClickListener {
-            if (!isFavorite) {
-                binding.favorite.setImageResource(R.drawable.baseline_favorite_24)
-                saveEventToFavorite()
-            } else {
-                binding.favorite.setImageResource(R.drawable.baseline_favorite_border_24)
-                removeEventFromFavorite(EventUtil.eventId)
-            }
-            isFavorite = !isFavorite
-        }
-    }
-
-    private fun getEvent() {
-        if (EventUtil.eventId == 0) {
-            detailViewModel.getEvent(intent.getIntExtra("event_id", 0))
-        } else {
-            detailViewModel.getEvent(EventUtil.eventId)
-        }
-    }
-
-    private fun checkIsEventExistInFavorite() {
-        detailViewModel.checkIsEventExistInFavorite(EventUtil.eventId)
     }
 
     private fun setupObservers() {
-        detailViewModel.event.observe(this) {
-            Glide.with(this)
-                .load(it.imageLogo)
-                .centerCrop()
-                .into(binding.ivEventImage)
-            url = it.link
-            val htmlText = it.description
-
-            binding.apply {
-                eventTitle.text = it.name
-                eventOrganizer.text = it.ownerName
-                eventCategory.text = it.category
-                eventTime.text = convertDate(this@DetailActivity, it.beginTime, it.endTime)
-                eventLocation.text = it.cityName
-                eventQuota.text = (it.quota - it.registrants).toString()
-                eventDescription.text = Html.fromHtml(htmlText, Html.FROM_HTML_MODE_LEGACY)
-                svDetail.visibility = View.VISIBLE
-                cvWebButton.visibility = View.VISIBLE
-                failedLoadData.visibility = View.GONE
-            }
-            EventUtil.eventDetail = it
-        }
-
-        detailViewModel.exception.observe(this) {
-            if (it) {
-                Toast.makeText(
-                    this,
-                    resources.getString(R.string.no_internet_connection),
-                    Toast.LENGTH_SHORT
-                ).show()
-                binding.failedLoadData.visibility = View.VISIBLE
-                detailViewModel.resetExceptionValue()
-            }
-        }
-
-        detailViewModel.isLoading.observe(this) {
-            if (it) {
-                binding.svDetail.visibility = View.GONE
-                binding.cvWebButton.visibility = View.GONE
-                binding.progBar.visibility = View.VISIBLE
-            } else {
-                binding.progBar.visibility = View.GONE
-            }
-        }
-
-        detailViewModel.isEventExistInFavorite.observe(this) {
-            isFavorite = it
-            if (isFavorite) {
-                binding.favorite.setImageResource(R.drawable.baseline_favorite_24)
-            } else {
-                binding.favorite.setImageResource(R.drawable.baseline_favorite_border_24)
-            }
+        detailViewModel.apply {
+            event.observe(this@DetailActivity) { event -> displayEventDetails(event) }
+            exception.observe(this@DetailActivity) { showError(it) }
+            isLoading.observe(this@DetailActivity) { toggleLoading(it) }
+            isEventExistInFavorite.observe(this@DetailActivity) { updateFavoriteIcon(it) }
         }
 
         lifecycleScope.launch {
@@ -150,32 +73,84 @@ class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
         }
     }
 
-    private fun saveEventToFavorite() {
-        EventUtil.eventDetail?.let {
-            detailViewModel.saveEventToFavorite(
-                Event(
-                    it.id,
-                    it.name,
-                    it.imageLogo,
-                    it.category,
-                    it.beginTime,
-                    it.endTime
-                )
-            )
-        }
-        Toast.makeText(
-            this,
-            resources.getString(R.string.success_save_to_favorite),
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun fetchEventDetails() {
+        detailViewModel.getEvent(eventId)
     }
 
-    private fun removeEventFromFavorite(id: Int) {
-        detailViewModel.removeEventFromFavorite(id)
-        Toast.makeText(
-            this,
-            resources.getString(R.string.success_remove_from_favorite),
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun checkFavoriteStatus() {
+        detailViewModel.checkIsEventExistInFavorite(eventId)
+    }
+
+    private fun displayEventDetails(event: com.example.eventdicoding.data.remote.model.Event) {
+        binding.apply {
+            Glide.with(this@DetailActivity)
+                .load(event.imageLogo)
+                .centerCrop()
+                .into(ivEventImage)
+            url = event.link
+            eventTitle.text = event.name
+            eventOrganizer.text = event.ownerName
+            eventCategory.text = event.category
+            eventTime.text = convertDate(this@DetailActivity, event.beginTime, event.endTime)
+            eventLocation.text = event.cityName // Ensure cityName exists in Event
+            eventQuota.text = (event.quota - event.registrants).toString() // Ensure quota and registrants exist in Event
+            eventDescription.text = Html.fromHtml(event.description, Html.FROM_HTML_MODE_LEGACY) // Ensure description exists
+            svDetail.visibility = View.VISIBLE
+            cvWebButton.visibility = View.VISIBLE
+            failedLoadData.visibility = View.GONE
+        }
+        EventUtil.eventDetail = event
+    }
+
+    private fun showError(hasError: Boolean) {
+        if (hasError) {
+            Toast.makeText(this, R.string.no_internet_connection, Toast.LENGTH_SHORT).show()
+            binding.failedLoadData.visibility = View.VISIBLE
+            detailViewModel.resetExceptionValue()
+        }
+    }
+
+    private fun toggleLoading(isLoading: Boolean) {
+        binding.apply {
+            svDetail.visibility = if (isLoading) View.GONE else View.VISIBLE
+            cvWebButton.visibility = if (isLoading) View.GONE else View.VISIBLE
+            progBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun openWebPage(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        if (intent.resolveActivity(packageManager) != null) startActivity(intent)
+    }
+
+    private fun toggleFavoriteStatus() {
+        if (!isFavorite) {
+            saveEventToFavorite()
+        } else {
+            removeEventFromFavorite()
+        }
+        isFavorite = !isFavorite
+    }
+
+    private fun saveEventToFavorite() {
+        EventUtil.eventDetail?.let { event ->
+            detailViewModel.saveEventToFavorite(
+                Event(event.id, event.name, event.imageLogo, event.category, event.beginTime, event.endTime) // Only include existing properties
+            )
+            Toast.makeText(this, R.string.success_save_to_favorite, Toast.LENGTH_SHORT).show()
+            updateFavoriteIcon(true)
+        }
+    }
+
+    private fun removeEventFromFavorite() {
+        detailViewModel.removeEventFromFavorite(eventId)
+        Toast.makeText(this, R.string.success_remove_from_favorite, Toast.LENGTH_SHORT).show()
+        updateFavoriteIcon(false)
+    }
+
+    private fun updateFavoriteIcon(isFavorite: Boolean) {
+        binding.favorite.setImageResource(
+            if (isFavorite) R.drawable.baseline_favorite_24 else R.drawable.baseline_favorite_border_24
+        )
     }
 }

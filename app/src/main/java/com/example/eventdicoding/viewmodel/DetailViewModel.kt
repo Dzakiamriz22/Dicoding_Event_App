@@ -22,13 +22,14 @@ class DetailViewModel(private val eventRepository: EventRepository) : ViewModel(
     private val _isEventExistInFavorite = MutableLiveData<Boolean>()
     val isEventExistInFavorite: LiveData<Boolean> get() = _isEventExistInFavorite
 
+    // Fetch event details
     fun getEvent(id: Int) {
         if (_event.value == null) {
             _isLoading.value = true
 
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val event = eventRepository.getEventById(id).event
+                    val event = eventRepository.fetchEventById(id).event
                     _event.postValue(event)
                     _exception.postValue(false)
                 } catch (e: Exception) {
@@ -40,25 +41,29 @@ class DetailViewModel(private val eventRepository: EventRepository) : ViewModel(
         }
     }
 
+    // Check if the event is in the favorites
     fun checkIsEventExistInFavorite(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            val isExist = eventRepository.checkIsEventExistInFavorite(id)
-            _isEventExistInFavorite.postValue(isExist > 0)
+            val isExist = eventRepository.checkIfEventExistsInFavorites(id) // Now returns Boolean
+            _isEventExistInFavorite.postValue(isExist) // Directly set the Boolean value
         }
     }
 
+    // Save event to favorites
     fun saveEventToFavorite(event: com.example.eventdicoding.data.local.entity.Event) {
         viewModelScope.launch(Dispatchers.IO) {
-            eventRepository.saveEventToFavorite(event)
+            eventRepository.addEventToFavorites(event)
         }
     }
 
+    // Remove event from favorites
     fun removeEventFromFavorite(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            eventRepository.removeEventFromFavorite(id)
+            eventRepository.removeEventFromFavorites(id)
         }
     }
 
+    // Reset exception state
     fun resetExceptionValue() {
         _exception.value = false
     }

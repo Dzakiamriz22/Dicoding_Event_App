@@ -19,18 +19,16 @@ import com.example.eventdicoding.viewmodel.ViewModelFactory
 class FavoriteFragment : Fragment(R.layout.fragment_favorite) {
 
     private val binding by viewBinding(FragmentFavoriteBinding::bind)
-    private val favoriteViewModel by lazy { createViewModel() }
-    private lateinit var favoriteAdapter: FavoriteAdapter
+    private val favoriteViewModel: FavoriteViewModel by lazy { createViewModel() }
+
+    private val favoriteAdapter: FavoriteAdapter by lazy {
+        FavoriteAdapter(findNavController())
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        setupObservers()
-        fetchFavoriteEvents()
-    }
-
-    override fun onResume() {
-        super.onResume()
+        observeFavoriteEvents()
         fetchFavoriteEvents()
     }
 
@@ -40,28 +38,38 @@ class FavoriteFragment : Fragment(R.layout.fragment_favorite) {
             LocalDatabase.getInstance(requireActivity()).eventDao()
         )
         val factory = ViewModelFactory(eventRepository)
-        return ViewModelProvider(requireActivity(), factory)[FavoriteViewModel::class.java]
+        return ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
     }
 
     private fun setupRecyclerView() {
-        favoriteAdapter = FavoriteAdapter(listOf(), findNavController())
-        binding.rvFavorite.layoutManager = LinearLayoutManager(requireActivity())
-        binding.rvFavorite.adapter = favoriteAdapter
+        with(binding.rvFavorite) {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = favoriteAdapter
+        }
     }
 
     private fun fetchFavoriteEvents() {
         favoriteViewModel.getFavoriteEvents()
+        toggleUIState(isLoading = true)
     }
 
-    private fun setupObservers() {
+    private fun observeFavoriteEvents() {
         favoriteViewModel.favoriteEvents.observe(viewLifecycleOwner) { events ->
-            favoriteAdapter.updateData(events)
-            updateUI(events.isEmpty())
+            favoriteAdapter.submitList(events)
+
+            // Update the UI based on the data state
+            toggleUIState(isLoading = false, isEmpty = events.isEmpty())
         }
     }
 
-    private fun updateUI(isEmpty: Boolean) {
-        binding.tvNoFavoriteEvent.visibility = if (isEmpty) View.VISIBLE else View.GONE
-        binding.progBar.visibility = View.GONE
+    private fun toggleUIState(isLoading: Boolean, isEmpty: Boolean = false) {
+        with(binding) {
+            progBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+
+            tvNoFavoriteEvent.visibility = if (isEmpty) View.VISIBLE else View.GONE
+
+            rvFavorite.visibility = if (!isEmpty && !isLoading) View.VISIBLE else View.GONE
+        }
     }
 }
+

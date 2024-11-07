@@ -9,8 +9,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.eventdicoding.R
-import com.example.eventdicoding.adapters.HomeFinishAdapter
-import com.example.eventdicoding.adapters.HomeUpcomingAdapter
+import com.example.eventdicoding.adapters.EventAdapter
 import com.example.eventdicoding.data.local.LocalDatabase
 import com.example.eventdicoding.data.remote.api.ApiClient
 import com.example.eventdicoding.data.repository.EventRepository
@@ -22,15 +21,15 @@ import com.example.eventdicoding.data.remote.model.Event
 class HomeFragment : Fragment(R.layout.fragment_home) {
     private val binding by viewBinding(FragmentHomeBinding::bind)
     private val homeViewModel by lazy { createViewModel() }
-    private lateinit var homeUpcomingAdapter: HomeUpcomingAdapter
-    private lateinit var homeFinishedAdapter: HomeFinishAdapter
+    private lateinit var upcomingAdapter: EventAdapter
+    private lateinit var finishedAdapter: EventAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
+        initializeRecyclerViews()
         setupSwipeRefresh()
-        setupObservers()
-        fetchEvents()
+        observeViewModel()
+        loadEvents()
     }
 
     private fun createViewModel(): HomeViewModel {
@@ -39,86 +38,67 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             LocalDatabase.getInstance(requireActivity()).eventDao()
         )
         val factory = ViewModelFactory(eventRepository)
-        return ViewModelProvider(requireActivity(), factory)[HomeViewModel::class.java]
+        return ViewModelProvider(requireActivity(), factory).get(HomeViewModel::class.java)
     }
 
-    private fun setupRecyclerView() {
+    private fun initializeRecyclerViews() {
         val navController = findNavController()
 
-        homeUpcomingAdapter = HomeUpcomingAdapter(listOf(), navController)
-        binding.rvHomeUpcoming.layoutManager = LinearLayoutManager(requireActivity(), LinearLayoutManager.HORIZONTAL, false)
-        binding.rvHomeUpcoming.adapter = homeUpcomingAdapter
+        upcomingAdapter = EventAdapter(navController)
+        binding.rvUpcomingEvents.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = upcomingAdapter
+            isNestedScrollingEnabled = true // Pastikan nested scrolling diaktifkan
+        }
 
-        homeFinishedAdapter = HomeFinishAdapter(listOf(), navController)
-        binding.rvHomeFinished.layoutManager = LinearLayoutManager(requireActivity())
-        binding.rvHomeFinished.adapter = homeFinishedAdapter
+        finishedAdapter = EventAdapter(navController)
+        binding.rvFinishedEvents.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = finishedAdapter
+            isNestedScrollingEnabled = true // Pastikan nested scrolling diaktifkan
+        }
     }
 
-    private fun fetchEvents() {
-        homeViewModel.getUpcomingAndFinishedEvents()
+    private fun loadEvents() {
+        homeViewModel.fetchEvents()
     }
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            homeViewModel.refreshUpcomingAndFinishedEvents()
+            homeViewModel.refreshEvents()
         }
     }
 
-    private fun setupObservers() {
-        homeViewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
-            handleUpcomingEvents(events)
-        }
-
-        homeViewModel.finishedEvents.observe(viewLifecycleOwner) { events ->
-            homeFinishedAdapter.updateData(events)
-        }
-
-        homeViewModel.exception.observe(viewLifecycleOwner) { hasError ->
-            if (hasError) showErrorToast()
-        }
-
-        homeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            toggleLoadingIndicator(isLoading)
-        }
-
-        homeViewModel.isRefreshLoading.observe(viewLifecycleOwner) { isRefreshing ->
-            binding.swipeRefresh.isRefreshing = isRefreshing
-        }
-
-        homeViewModel.refreshException.observe(viewLifecycleOwner) { hasError ->
-            if (hasError) showErrorToast()
+    private fun observeViewModel() {
+        homeViewModel.apply {
+            upcomingEvents.observe(viewLifecycleOwner) { events -> updateUpcomingEvents(events) }
+            finishedEvents.observe(viewLifecycleOwner) { events -> finishedAdapter.updateEvents(events) }
+            isLoading.observe(viewLifecycleOwner) { isLoading -> updateLoadingState(isLoading) }
+            isRefreshing.observe(viewLifecycleOwner) { isRefreshing -> binding.swipeRefresh.isRefreshing = isRefreshing }
+            error.observe(viewLifecycleOwner) { showErrorToast() }
         }
     }
 
-    private fun handleUpcomingEvents(events: List<Event>) {
+    private fun updateUpcomingEvents(events: List<Event>) {
         binding.apply {
+            rvUpcomingEvents.visibility = View.VISIBLE
+            rvFinishedEvents.visibility = View.VISIBLE
+            upcomingAdapter.updateEvents(events)
             failedLoadData.visibility = View.GONE
-            homeUpcoming.visibility = View.VISIBLE
-            homeFinished.visibility = View.VISIBLE
-            rvHomeUpcoming.visibility = View.VISIBLE
-            rvHomeFinished.visibility = View.VISIBLE
         }
-        homeUpcomingAdapter.updateEvents(events)
     }
 
-    private fun toggleLoadingIndicator(isLoading: Boolean) {
+    private fun updateLoadingState(isLoading: Boolean) {
         binding.apply {
-            val visibility = if (isLoading) View.GONE else View.VISIBLE
-            homeUpcoming.visibility = visibility
-            homeFinished.visibility = visibility
-            rvHomeUpcoming.visibility = visibility
-            rvHomeFinished.visibility = visibility
-            progBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+            rvUpcomingEvents.visibility = if (isLoading) View.GONE else View.VISIBLE
+            rvFinishedEvents.visibility = if (isLoading) View.GONE else View.VISIBLE
         }
     }
 
     private fun showErrorToast() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.no_internet_connection),
-            Toast.LENGTH_SHORT
-        ).show()
+        Toast.makeText(requireContext(), getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show()
         binding.failedLoadData.visibility = View.VISIBLE
-        homeViewModel.resetExceptionValues()
+        homeViewModel.resetErrorFlags()
     }
 }

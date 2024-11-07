@@ -21,18 +21,18 @@ import com.example.eventdicoding.data.remote.model.Event
 class FinishedFragment : Fragment(R.layout.fragment_finished) {
 
     private val binding by viewBinding(FragmentFinishedBinding::bind)
-    private val finishedViewModel by lazy { createViewModel() }
+    private val finishedViewModel by lazy { createFinishedViewModel() }
     private lateinit var finishedAdapter: FinishedAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        setupSwipeRefresh()
-        setupObservers()
-        fetchFinishedEvents()
+        initializeRecyclerView()
+        setupSwipeRefreshListener()
+        observeViewModel()
+        loadFinishedEvents()
     }
 
-    private fun createViewModel(): FinishedViewModel {
+    private fun createFinishedViewModel(): FinishedViewModel {
         val eventRepository = EventRepository(
             ApiClient.apiClient,
             LocalDatabase.getInstance(requireActivity()).eventDao()
@@ -41,25 +41,25 @@ class FinishedFragment : Fragment(R.layout.fragment_finished) {
         return ViewModelProvider(requireActivity(), factory)[FinishedViewModel::class.java]
     }
 
-    private fun setupRecyclerView() {
-        finishedAdapter = FinishedAdapter(listOf(), findNavController())
+    private fun initializeRecyclerView() {
+        finishedAdapter = FinishedAdapter(emptyList(), findNavController())
         binding.rvFinished.layoutManager = LinearLayoutManager(requireActivity())
         binding.rvFinished.adapter = finishedAdapter
     }
 
-    private fun fetchFinishedEvents() {
-        finishedViewModel.getFinishedEvents()
+    private fun loadFinishedEvents() {
+        finishedViewModel.loadFinishedEvents()
     }
 
-    private fun setupSwipeRefresh() {
+    private fun setupSwipeRefreshListener() {
         binding.swipeRefresh.setOnRefreshListener {
             finishedViewModel.refreshFinishedEvents()
         }
     }
 
-    private fun setupObservers() {
+    private fun observeViewModel() {
         finishedViewModel.finishedEvents.observe(viewLifecycleOwner) { events ->
-            updateFinishedEvents(events)
+            displayFinishedEvents(events)
         }
 
         finishedViewModel.exception.observe(viewLifecycleOwner) { hasError ->
@@ -67,7 +67,7 @@ class FinishedFragment : Fragment(R.layout.fragment_finished) {
         }
 
         finishedViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            toggleLoadingIndicator(isLoading)
+            handleLoadingState(isLoading)
         }
 
         finishedViewModel.isRefreshLoading.observe(viewLifecycleOwner) { isRefreshing ->
@@ -79,13 +79,13 @@ class FinishedFragment : Fragment(R.layout.fragment_finished) {
         }
     }
 
-    private fun updateFinishedEvents(events: List<Event>) {
+    private fun displayFinishedEvents(events: List<Event>) {
         binding.failedLoadData.visibility = View.GONE
         binding.rvFinished.visibility = View.VISIBLE
         finishedAdapter.updateData(events)
     }
 
-    private fun toggleLoadingIndicator(isLoading: Boolean) {
+    private fun handleLoadingState(isLoading: Boolean) {
         binding.rvFinished.visibility = if (isLoading) View.GONE else View.VISIBLE
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
@@ -97,6 +97,6 @@ class FinishedFragment : Fragment(R.layout.fragment_finished) {
             Toast.LENGTH_SHORT
         ).show()
         binding.failedLoadData.visibility = View.VISIBLE
-        finishedViewModel.resetExceptionValues()
+        finishedViewModel.resetExceptionFlags()
     }
 }

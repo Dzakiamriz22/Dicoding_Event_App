@@ -25,7 +25,7 @@ class FinishedAdapter(
     override fun getItemCount(): Int = finishedEvents.size
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-        holder.bind(finishedEvents[position], navController)
+        holder.bind(finishedEvents[position])
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -34,26 +34,24 @@ class FinishedAdapter(
         notifyDataSetChanged()
     }
 
-    class EventViewHolder(
-        private val binding: ListItemBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+    inner class EventViewHolder(private val binding: ListItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(event: Event, navController: NavController) {
-            loadImage(event.imageLogo)
+        fun bind(event: Event) {
+            loadEventImage(event.imageLogo)
             binding.eventTitle.text = event.name
             binding.eventTime.text = convertDate(itemView.context, event.beginTime, event.endTime)
             binding.eventCategory.text = event.category
-            setClickListener(event.id, navController)
+            setEventClickListener(event.id)
         }
 
-        private fun loadImage(imageUrl: String) {
+        private fun loadEventImage(imageUrl: String) {
             Glide.with(binding.root.context)
                 .load(imageUrl)
                 .centerCrop()
                 .into(binding.eventImage)
         }
 
-        private fun setClickListener(eventId: Int, navController: NavController) {
+        private fun setEventClickListener(eventId: Int) {
             binding.eventCard.setOnClickListener {
                 EventUtil.eventId = eventId
                 navController.navigate(R.id.action_fragmentFinished_to_detail_activity)

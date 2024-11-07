@@ -1,17 +1,5 @@
 package com.example.eventdicoding.data.remote.model
 
-data class HeaderListEvent(
-    val error: Boolean,
-    val message: String,
-    val listEvents: List<Event>
-)
-
-data class HeaderSingleEvent(
-    val error: Boolean,
-    val message: String,
-    val event: Event
-)
-
 data class Event(
     val id: Int,
     val name: String,
@@ -28,3 +16,4 @@ data class Event(
     val endTime: String,
     val link: String
 )
+

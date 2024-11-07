@@ -36,7 +36,7 @@
     <string name="notification">Notifikasi</string>
     <string name="notification_content_text">Akan berlangsung pada %1$s | %2$s WIB.</string>
     <string name="notification_subtext">Pengingat</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="cari_event">Cari Event</string>
+    <string name="no_result_found">No results found</string>
 </resources>

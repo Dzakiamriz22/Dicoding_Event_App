@@ -7,17 +7,18 @@ import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.eventdicoding.R
+import com.example.eventdicoding.databinding.ItemEventBinding
 import com.example.eventdicoding.data.remote.model.Event
-import com.example.eventdicoding.databinding.ItemHomeFinishBinding
 import com.example.eventdicoding.util.EventUtil
 
-class HomeFinishAdapter(
-    private var events: List<Event>,
+class EventAdapter(
     private val navController: NavController
-) : RecyclerView.Adapter<HomeFinishAdapter.EventViewHolder>() {
+) : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
+
+    private var events: List<Event> = listOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
-        val binding = ItemHomeFinishBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemEventBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return EventViewHolder(binding)
     }
 
@@ -28,31 +29,30 @@ class HomeFinishAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateData(newEvents: List<Event>) {
+    fun updateEvents(newEvents: List<Event>) {
         events = newEvents
         notifyDataSetChanged()
     }
 
     class EventViewHolder(
-        private val binding: ItemHomeFinishBinding
+        private val binding: ItemEventBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(event: Event, navController: NavController) {
-            loadImage(event.imageLogo)
-            binding.eventTitle.text = event.name
-            setClickListener(event.id, navController)
-        }
-
-        private fun loadImage(imageUrl: String) {
             Glide.with(binding.root.context)
-                .load(imageUrl)
+                .load(event.imageLogo)
                 .centerCrop()
                 .into(binding.eventImage)
-        }
 
-        private fun setClickListener(eventId: Int, navController: NavController) {
-            binding.eventCard.setOnClickListener {
-                EventUtil.eventId = eventId
+            binding.eventTitle.text = event.name
+
+            val formattedTime = "${event.beginTime} - ${event.endTime}"
+            binding.tvEventTime.text = formattedTime
+
+            binding.tvEventCategory.text = event.category
+
+            binding.root.setOnClickListener {
+                EventUtil.eventId = event.id
                 navController.navigate(R.id.action_fragmentHome_to_detail_activity)
             }
         }

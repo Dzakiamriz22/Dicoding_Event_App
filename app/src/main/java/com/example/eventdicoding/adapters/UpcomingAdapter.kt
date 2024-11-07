@@ -1,5 +1,6 @@
 package com.example.eventdicoding.adapters
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.navigation.NavController
@@ -17,46 +18,50 @@ class UpcomingAdapter(
 ) : RecyclerView.Adapter<UpcomingAdapter.EventViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        val binding = ListItemBinding.inflate(inflater, parent, false)
-        return EventViewHolder(binding)
+        val binding = ListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return EventViewHolder(binding, navController)
     }
 
     override fun getItemCount(): Int = events.size
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-        holder.bind(events[position], navController)
+        holder.bind(events[position])
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateEvents(newEvents: List<Event>) {
         events = newEvents
         notifyDataSetChanged()
     }
 
     class EventViewHolder(
-        private val binding: ListItemBinding
+        private val binding: ListItemBinding,
+        private val navController: NavController
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(event: Event, navController: NavController) {
-            loadEventImage(event.imageLogo)
-            binding.eventTitle.text = event.name
-            binding.eventTime.text = convertDate(itemView.context, event.beginTime, event.endTime)
-            binding.eventCategory.text = event.category
+        fun bind(event: Event) {
+            with(binding) {
+                eventTitle.text = event.name
+                eventTime.text = convertDate(itemView.context, event.beginTime, event.endTime)
+                eventCategory.text = event.category
 
-            binding.eventCard.setOnClickListener {
-                EventUtil.eventId = event.id
-                navigateToDetailActivity(navController)
+                loadEventImage(event.imageLogo)
+
+                eventCard.setOnClickListener {
+                    EventUtil.eventId = event.id
+                    navigateToDetailActivity()
+                }
             }
         }
 
         private fun loadEventImage(imageUrl: String?) {
             Glide.with(binding.root.context)
-                .load(imageUrl)
+                .load(imageUrl ?: R.drawable.image_placeholder)
                 .centerCrop()
                 .into(binding.eventImage)
         }
 
-        private fun navigateToDetailActivity(navController: NavController) {
+        private fun navigateToDetailActivity() {
             navController.navigate(R.id.action_fragmentUpcoming_to_detail_activity)
         }
     }

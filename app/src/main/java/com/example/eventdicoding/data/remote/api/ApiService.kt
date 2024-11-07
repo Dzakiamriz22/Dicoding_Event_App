@@ -1,7 +1,7 @@
 package com.example.eventdicoding.data.remote.api
 
-import com.example.eventdicoding.data.remote.model.HeaderListEvent
 import com.example.eventdicoding.data.remote.model.HeaderSingleEvent
+import com.example.eventdicoding.data.remote.model.HeaderListEvent
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

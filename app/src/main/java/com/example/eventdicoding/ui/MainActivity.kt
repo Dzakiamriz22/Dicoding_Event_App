@@ -16,39 +16,44 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val binding by viewBinding(ActivityMainBinding::bind)
-
-    private val settingsPreference by lazy {
-        SettingsPreferences(this)
-    }
-
-    private val navController: NavController by lazy {
-        findNavController(R.id.nav_host_fragment_activity_main)
-    }
+    private val settingsPreference by lazy { SettingsPreferences(this) }
+    private val navController: NavController by lazy { findNavController(R.id.nav_host_fragment_activity_main) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initializeUI()
-        setupPreferenceObservers()
+        observeDarkModeSetting()
     }
 
     private fun initializeUI() {
         setupBottomNavigation()
-        binding.buttonSearch.setOnClickListener {
-            startActivity(Intent(this, SearchActivity::class.java))
-        }
+        setupSearchButton()
     }
 
     private fun setupBottomNavigation() {
         binding.navView.setupWithNavController(navController)
     }
 
-    private fun setupPreferenceObservers() {
+    private fun setupSearchButton() {
+        binding.buttonSearch.setOnClickListener {
+            startActivity(Intent(this, EventSearchActivity::class.java))
+        }
+    }
+
+    private fun observeDarkModeSetting() {
         lifecycleScope.launch {
-            settingsPreference.darkMode.collect { isEnabled ->
-                AppCompatDelegate.setDefaultNightMode(
-                    if (isEnabled) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-                )
+            settingsPreference.darkMode.collect { isDarkModeEnabled ->
+                applyDarkMode(isDarkModeEnabled)
             }
         }
+    }
+
+    private fun applyDarkMode(isDarkModeEnabled: Boolean) {
+        val nightMode = if (isDarkModeEnabled) {
+            AppCompatDelegate.MODE_NIGHT_YES
+        } else {
+            AppCompatDelegate.MODE_NIGHT_NO
+        }
+        AppCompatDelegate.setDefaultNightMode(nightMode)
     }
 }

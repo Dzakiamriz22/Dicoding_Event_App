@@ -13,10 +13,11 @@ class MyApp : Application() {
     }
 
     private fun initializeWorkManager() {
-        val workerFactory = WorkFactory()
-        val config = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
-        WorkManager.initialize(this, config)
+        WorkManager.initialize(
+            this,
+            Configuration.Builder()
+                .setWorkerFactory(WorkFactory())
+                .build()
+        )
     }
 }

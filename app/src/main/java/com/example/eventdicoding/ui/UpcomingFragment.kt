@@ -19,15 +19,17 @@ import com.example.eventdicoding.viewmodel.ViewModelFactory
 import com.example.eventdicoding.data.remote.model.Event
 
 class UpcomingFragment : Fragment(R.layout.fragment_upcoming) {
+
     private val binding by viewBinding(FragmentUpcomingBinding::bind)
     private val upcomingViewModel by lazy { createViewModel() }
     private lateinit var upcomingAdapter: UpcomingAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         setupRecyclerView()
-        setupObservers()
         setupSwipeRefresh()
+        observeViewModel()
         loadUpcomingEvents()
     }
 
@@ -37,17 +39,13 @@ class UpcomingFragment : Fragment(R.layout.fragment_upcoming) {
             LocalDatabase.getInstance(requireActivity()).eventDao()
         )
         val factory = ViewModelFactory(eventRepository)
-        return ViewModelProvider(requireActivity(), factory)[UpcomingViewModel::class.java]
+        return ViewModelProvider(this, factory).get(UpcomingViewModel::class.java)
     }
 
     private fun setupRecyclerView() {
         upcomingAdapter = UpcomingAdapter(listOf(), findNavController())
-        binding.upcomingEventsRecyclerView.layoutManager = LinearLayoutManager(requireActivity())
+        binding.upcomingEventsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.upcomingEventsRecyclerView.adapter = upcomingAdapter
-    }
-
-    private fun loadUpcomingEvents() {
-        upcomingViewModel.fetchUpcomingEvents()
     }
 
     private fun setupSwipeRefresh() {
@@ -56,31 +54,39 @@ class UpcomingFragment : Fragment(R.layout.fragment_upcoming) {
         }
     }
 
-    private fun setupObservers() {
-        upcomingViewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
-            updateUpcomingEvents(events)
-        }
+    private fun observeViewModel() {
+        upcomingViewModel.apply {
+            upcomingEvents.observe(viewLifecycleOwner) { events ->
+                updateUpcomingEvents(events)
+            }
 
-        upcomingViewModel.exception.observe(viewLifecycleOwner) { hasError ->
-            if (hasError) showErrorToast()
-        }
+            exception.observe(viewLifecycleOwner) { hasError ->
+                if (hasError) showErrorToast()
+            }
 
-        upcomingViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            toggleLoadingIndicator(isLoading)
-        }
+            isLoading.observe(viewLifecycleOwner) { isLoading ->
+                toggleLoadingIndicator(isLoading)
+            }
 
-        upcomingViewModel.isRefreshLoading.observe(viewLifecycleOwner) { isRefreshing ->
-            binding.swipeRefreshContainer.isRefreshing = isRefreshing
-        }
+            isRefreshLoading.observe(viewLifecycleOwner) { isRefreshing ->
+                binding.swipeRefreshContainer.isRefreshing = isRefreshing
+            }
 
-        upcomingViewModel.refreshException.observe(viewLifecycleOwner) { hasError ->
-            if (hasError) showErrorToast()
+            refreshException.observe(viewLifecycleOwner) { hasError ->
+                if (hasError) showErrorToast()
+            }
         }
     }
 
+    private fun loadUpcomingEvents() {
+        upcomingViewModel.fetchUpcomingEvents()
+    }
+
     private fun updateUpcomingEvents(events: List<Event>) {
-        binding.loadFailedMessage.visibility = View.GONE
-        binding.upcomingEventsRecyclerView.visibility = View.VISIBLE
+        binding.apply {
+            loadFailedMessage.visibility = View.GONE
+            upcomingEventsRecyclerView.visibility = View.VISIBLE
+        }
         upcomingAdapter.updateEvents(events)
     }
 
@@ -95,7 +101,9 @@ class UpcomingFragment : Fragment(R.layout.fragment_upcoming) {
     }
 
     private fun toggleLoadingIndicator(isLoading: Boolean) {
-        binding.upcomingEventsRecyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
-        binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.apply {
+            upcomingEventsRecyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
+            loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
     }
 }

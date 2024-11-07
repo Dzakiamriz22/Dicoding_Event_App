@@ -26,7 +26,7 @@ class SearchViewModel(private val eventRepository: EventRepository) : ViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val events = eventRepository.getEventsByKeyword(keyword).listEvents
+                val events = eventRepository.searchEventsByKeyword(keyword).listEvents
                 _eventsByKeyword.postValue(events)
                 _exception.postValue(false)
             } catch (e: Exception) {

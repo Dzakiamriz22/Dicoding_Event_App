@@ -16,7 +16,7 @@ class FavoriteViewModel(private val eventRepository: EventRepository) : ViewMode
 
     fun getFavoriteEvents() {
         viewModelScope.launch(Dispatchers.IO) {
-            val events = eventRepository.getAllFavoriteEvent()
+            val events = eventRepository.fetchAllFavoriteEvents()
             _favoriteEvents.postValue(events)
         }
     }
